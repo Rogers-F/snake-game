@@ -242,6 +242,20 @@ canvas {
   }
 }
 
+/* 矮屏（横屏手机）收紧间距；棋盘优先用规范尺寸，实在放不下再缩小，避免出现滚动条。 */
+@media (max-height: 560px) {
+  .app {
+    gap: 8px;
+    padding: 8px 0;
+  }
+}
+
+@media (max-height: 430px) {
+  .app {
+    --board-size: min(92vw, 60vh, 480px, calc(100vh - 180px));
+  }
+}
+
 @keyframes score-pop {
   0% {
     transform: scale(1);
