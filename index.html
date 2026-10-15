@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="浏览器贪吃蛇：方向键、WASD、触屏滑动，本地最高分，速度会逐渐变快。">
+  <meta name="theme-color" content="#140e0a">
+  <title>贪吃蛇</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23140e0a'/%3E%3Cpath d='M7 21c1-7 6-9 10-7 4 2 6 1 8-2' fill='none' stroke='%233dbe7a' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='25' cy='10' r='3' fill='%23ff5a36'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app" data-state="ready">
+    <header class="top">
+      <div class="brand">
+        <p class="eyebrow">街机小游戏</p>
+        <h1>贪吃蛇</h1>
+      </div>
+      <div class="hud">
+        <div class="stat">
+          <span class="stat-label" id="score-label">分数</span>
+          <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label" id="high-label">最高分</span>
+          <span class="stat-value" id="high-score">0</span>
+        </div>
+        <div class="stat stat-speed">
+          <span class="stat-label">速度</span>
+          <span class="stat-value" id="speed">1.00×</span>
+          <span class="meter" aria-hidden="true"><span id="speed-bar"></span></span>
+        </div>
+        <button id="btn-mute" class="mute" type="button" aria-pressed="false">声音开</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="board-wrap" id="board-wrap">
+        <canvas id="board" width="640" height="640" aria-label="贪吃蛇棋盘">
+          当前浏览器需要支持画布才能玩这局贪吃蛇。
+        </canvas>
+        <div id="overlay" class="overlay is-on" aria-hidden="false">
+          <div class="overlay-card">
+            <h2 id="overlay-title">准备好了</h2>
+            <div id="overlay-score" class="overlay-score">0</div>
+            <p id="overlay-text">方向键 / WASD，或滑动、点按转向。吃果实会变长、变快，撞墙或咬到自己就结束。</p>
+            <button id="overlay-action" class="primary" type="button">开始</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="controls">
+          <button id="btn-start" class="primary" type="button">开始</button>
+          <button id="btn-pause" type="button" disabled>暂停</button>
+          <button id="btn-restart" type="button" disabled>重开</button>
+        </div>
+        <p class="hint">空格暂停 · R 重开<br>最高分保存在这台浏览器</p>
+        <div class="pad" role="group" aria-label="屏幕方向键">
+          <button type="button" data-dir="up" aria-label="向上">↑</button>
+          <button type="button" data-dir="left" aria-label="向左">←</button>
+          <button type="button" data-dir="down" aria-label="向下">↓</button>
+          <button type="button" data-dir="right" aria-label="向右">→</button>
+        </div>
+      </aside>
+    </main>
+    <p id="live" class="sr-only" aria-live="polite"></p>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
