@@ -58,7 +58,7 @@
   var state = "idle";
   var snake = [];
   var direction = "right";
-  var pending = null;
+  var dirQueue = [];
   var food = null;
   var score = 0;
   var best = loadBest();
@@ -116,7 +116,7 @@
       { x: 5, y: 10 }
     ];
     direction = "right";
-    pending = null;
+    dirQueue = [];
     score = 0;
     interval = START_INTERVAL;
     bestAtStart = best;
@@ -152,8 +152,10 @@
 
   function queueDirection(next) {
     if (state !== "playing" || !VECTORS[next]) return;
-    if (opposite(next, direction)) return;
-    pending = next;
+    var tail = dirQueue.length ? dirQueue[dirQueue.length - 1] : direction;
+    if (opposite(next, tail) || next === tail) return;
+    if (dirQueue.length >= 2) return;
+    dirQueue.push(next);
   }
 
   function schedule() {
@@ -168,8 +170,10 @@
   }
 
   function step() {
-    if (pending && !opposite(pending, direction)) direction = pending;
-    pending = null;
+    if (dirQueue.length) {
+      var queued = dirQueue.shift();
+      if (!opposite(queued, direction)) direction = queued;
+    }
 
     var head = snake[snake.length - 1];
     var vector = VECTORS[direction];
@@ -206,13 +210,22 @@
     var placed = spawnFood();
     updateUI();
     bumpScore();
-    if (!placed) die();
+    if (!placed) win();
+  }
+
+  function win() {
+    if (state === "win" || state === "over" || state === "dying") return;
+    state = "win";
+    dirQueue = [];
+    clearTimeout(timer);
+    timer = null;
+    updateUI();
   }
 
   function die() {
     if (state === "dying" || state === "over") return;
     state = "dying";
-    pending = null;
+    dirQueue = [];
     clearTimeout(timer);
     timer = null;
     updateUI();
@@ -244,7 +257,7 @@
   function pause() {
     if (state !== "playing") return;
     state = "paused";
-    pending = null;
+    dirQueue = [];
     clearTimeout(timer);
     timer = null;
     updateUI();
@@ -258,6 +271,7 @@
   }
 
   function onToggle() {
+    if (state === "dying") return;
     if (state === "playing") pause();
     else if (state === "paused") resume();
     else startRound();
@@ -273,16 +287,20 @@
   function updateUI() {
     scoreEl.textContent = String(score);
     bestEl.textContent = String(best);
-    speedEl.textContent = "速度 Lv." + speedLevel();
+    speedEl.textContent = interval <= MIN_INTERVAL ? "速度 Lv.MAX" : "速度 Lv." + speedLevel();
 
-    var showOverlay = state === "idle" || state === "paused" || state === "over";
+    var showOverlay = state === "idle" || state === "paused" || state === "over" || state === "win";
     overlay.classList.toggle("show", showOverlay);
     if (showOverlay) overlay.removeAttribute("inert");
     else overlay.setAttribute("inert", "");
     overlay.setAttribute("aria-hidden", showOverlay ? "false" : "true");
 
-    overlayScore.hidden = state !== "over";
-    overlayRecord.hidden = !(state === "over" && isNewRecord);
+    var showScore = state === "over" || state === "win";
+    overlayScore.hidden = !showScore;
+    overlayScore.textContent = showScore ? "本局得分 " + score : "";
+    overlayRecord.hidden = !(showScore && isNewRecord);
+    overlayRecord.textContent = state === "win" ? "新纪录" : "🎉 新纪录！";
+    overlayTitle.classList.toggle("is-win", state === "win");
 
     if (state === "idle") {
       overlayTitle.textContent = "按 空格 或点击开始";
@@ -296,7 +314,10 @@
       toggleBtn.textContent = "继续";
     } else if (state === "over") {
       overlayTitle.textContent = "游戏结束";
-      overlayScore.textContent = "本局得分 " + score;
+      overlayBtn.textContent = "再来一局";
+      toggleBtn.textContent = "开始";
+    } else if (state === "win") {
+      overlayTitle.textContent = "🏆 通关！蛇已经填满棋盘";
       overlayBtn.textContent = "再来一局";
       toggleBtn.textContent = "开始";
     }
@@ -412,12 +433,19 @@
     var key = event.key;
     if (key === " " || key === "Spacebar") {
       event.preventDefault();
+      if (state === "dying") return;
       onToggle();
       return;
     }
-    if (key === "Enter" && (state === "over" || state === "dying")) {
-      event.preventDefault();
-      startRound();
+    if (key === "Enter") {
+      if (state === "dying") {
+        event.preventDefault();
+        return;
+      }
+      if (state === "over" || state === "win") {
+        event.preventDefault();
+        startRound();
+      }
       return;
     }
     var next = KEY_DIR[key];
@@ -474,6 +502,77 @@
   if (window.ResizeObserver) {
     new ResizeObserver(resizeCanvas).observe(board);
   }
+
+  function prepareWin() {
+    var cells = [];
+    var y;
+    var x;
+    var head;
+    clearTimeout(timer);
+    timer = null;
+    clearTimeout(deathTimer);
+    deathTimer = null;
+    board.classList.remove("shake");
+    for (y = 0; y < ROWS; y += 1) {
+      if (y % 2 === 0) {
+        for (x = 0; x < COLS; x += 1) cells.push({ x: x, y: y });
+      } else {
+        for (x = COLS - 1; x >= 0; x -= 1) cells.push({ x: x, y: y });
+      }
+    }
+    snake = cells.slice(0, cells.length - 1);
+    food = cells[cells.length - 1];
+    head = snake[snake.length - 1];
+    if (food.x === head.x) direction = food.y > head.y ? "down" : "up";
+    else direction = food.x > head.x ? "right" : "left";
+    dirQueue = [];
+    score = snake.length - 3;
+    interval = Math.max(MIN_INTERVAL, START_INTERVAL - score * SPEED_STEP);
+    bestAtStart = best;
+    isNewRecord = false;
+    state = "playing";
+    updateUI();
+    schedule();
+  }
+
+  function placeFoodAhead() {
+    var head;
+    var names;
+    var i;
+    var name;
+    var nx;
+    var ny;
+    var j;
+    var blocked;
+    if (state !== "playing") return false;
+    head = snake[snake.length - 1];
+    names = [direction, "up", "down", "left", "right"];
+    for (i = 0; i < names.length; i += 1) {
+      name = names[i];
+      if (opposite(name, direction)) continue;
+      nx = head.x + VECTORS[name].x;
+      ny = head.y + VECTORS[name].y;
+      if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
+      blocked = false;
+      for (j = 0; j < snake.length; j += 1) {
+        if (snake[j].x === nx && snake[j].y === ny) {
+          blocked = true;
+          break;
+        }
+      }
+      if (blocked) continue;
+      direction = name;
+      dirQueue = [];
+      food = { x: nx, y: ny };
+      return true;
+    }
+    return false;
+  }
+
+  window.__snakeTest = {
+    prepareWin: prepareWin,
+    placeFoodAhead: placeFoodAhead
+  };
 
   resetRound();
   state = "idle";
