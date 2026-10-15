@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>贪吃蛇</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <h1>贪吃蛇</h1>
+    <div class="scorebar" aria-live="polite" aria-atomic="true">
+      <p>得分 <strong id="score" class="num">0</strong></p>
+      <p id="speed" class="speed">速度 Lv.1</p>
+      <p>最高 <strong id="best" class="num">0</strong></p>
+    </div>
+    <div class="board" id="board">
+      <canvas id="canvas" width="480" height="480" aria-label="贪吃蛇游戏棋盘"></canvas>
+      <div class="overlay show" id="overlay">
+        <div class="overlay-card" id="overlay-card" aria-live="polite" aria-atomic="true">
+          <p class="overlay-title" id="overlay-title">按 空格 或点击开始</p>
+          <p class="overlay-score num" id="overlay-score" hidden>本局得分 0</p>
+          <p class="overlay-record" id="overlay-record" hidden>🎉 新纪录！</p>
+          <button type="button" class="btn btn-primary" id="overlay-btn">开始</button>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn btn-primary" id="toggle-btn">开始</button>
+      <button type="button" class="btn btn-secondary" id="restart-btn">重开</button>
+    </div>
+    <p class="hint hint-desktop">方向键 / WASD 移动，空格暂停</p>
+    <p class="hint hint-touch">在棋盘上滑动控制方向</p>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

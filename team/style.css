@@ -1,0 +1,291 @@
+:root {
+  --bg: #0f172a;
+  --board: #111827;
+  --grid: rgba(255, 255, 255, 0.04);
+  --snake: #22c55e;
+  --snake-head: #4ade80;
+  --food: #f43f5e;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --primary: #22c55e;
+  --on-primary: #052e16;
+  --secondary: #1f2937;
+  --secondary-border: #334155;
+  --overlay: rgba(15, 23, 42, 0.85);
+  --board-size: min(92vw, 60vh, 480px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+.app {
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.scorebar {
+  width: var(--board-size);
+  max-width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.scorebar p {
+  margin: 0;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.num.is-pop {
+  animation: score-pop 150ms ease;
+}
+
+.speed {
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.board {
+  width: var(--board-size);
+  height: var(--board-size);
+  max-width: 100%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--board);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--snake) 15%, transparent);
+  touch-action: none;
+  flex: 0 0 auto;
+}
+
+.board.shake {
+  animation: board-shake 200ms linear;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--board);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay);
+  border-radius: 12px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 150ms ease, visibility 0s linear 150ms;
+}
+
+.overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 150ms ease, visibility 0s linear 0s;
+}
+
+.overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  text-align: center;
+}
+
+.overlay-title,
+.overlay-score,
+.overlay-record {
+  margin: 0;
+}
+
+.overlay-title {
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.overlay-score {
+  font-size: 20px;
+}
+
+.overlay-record {
+  font-size: 16px;
+}
+
+.actions {
+  width: var(--board-size);
+  max-width: 100%;
+  display: flex;
+  gap: 16px;
+}
+
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.actions .btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--text);
+  border-color: var(--secondary-border);
+}
+
+.btn:hover {
+  filter: brightness(1.1);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--snake-head);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin: 0;
+  max-width: min(92vw, 480px);
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+}
+
+.hint-touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .hint-desktop {
+    display: none;
+  }
+
+  .hint-touch {
+    display: block;
+  }
+}
+
+@keyframes score-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes board-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-6px);
+  }
+
+  50% {
+    transform: translateX(6px);
+  }
+
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    transition: none;
+  }
+
+  .num.is-pop,
+  .board.shake {
+    animation: none;
+  }
+
+  .btn:active {
+    transform: none;
+  }
+}
